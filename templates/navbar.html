@@ -1,0 +1,103 @@
+<nav class="navbar">
+
+    <div class="nav-left">
+        <a href="/" class="logo">
+            🩺 <span>MedLedger</span>
+        </a>
+    </div>
+
+    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+
+    <ul class="nav-links" id="navLinks">
+
+        <!-- ADMIN -->
+        {% if session.get("admin") %}
+
+            <li><a href="/">Home</a></li>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/verify">Verify</a></li>
+            <li><a href="/manual-verify">Manual Verify</a></li>
+            <li><a href="/admin/verifications">My Logs</a></li>
+
+            <li class="nav-profile">
+                <div class="profile-circle">A</div>
+                <span>
+                    Admin<br>
+                    <small>System Authority</small>
+                </span>
+            </li>
+
+            <li>
+                <a class="logout" href="/admin/logout">Logout</a>
+            </li>
+
+
+        <!-- BRANCH -->
+        {% elif session.get("hospital_id") and session.get("role") == "branch" %}
+
+            <li><a href="/">Home</a></li>
+            <li><a href="/hospital-dashboard">Dashboard</a></li>
+            <li><a href="/upload">Upload</a></li>
+            <li><a href="/verify">Verify</a></li>
+            <li><a href="/manual-verify">Manual Verify</a></li>
+            <li><a href="/hospital/my-verifications">My Logs</a></li>
+
+            <li class="nav-profile">
+                <div class="profile-circle">B</div>
+                <span>
+                    {{ session.get("branch_name") }}<br>
+                    <small>{{ session.get("hospital_name") }}</small>
+                </span>
+            </li>
+
+            <li>
+                <a class="logout" href="/logout">Logout</a>
+            </li>
+
+
+        <!-- MAIN -->
+        {% elif session.get("hospital_id") and session.get("role") == "main" %}
+
+            <li><a href="/">Home</a></li>
+            <li><a href="/main-dashboard">Dashboard</a></li>
+            <li><a href="/upload">Upload</a></li>
+            <li><a href="/verify">Verify</a></li>
+            <li><a href="/manual-verify">Manual Verify</a></li>
+            <li><a href="/main/my-verifications">My Logs</a></li>
+
+            <li class="nav-profile">
+                <div class="profile-circle">M</div>
+                <span>
+                    {{ session.get("hospital_name") }}<br>
+                    <small>Main Hospital</small>
+                </span>
+            </li>
+
+            <li>
+                <a class="logout" href="/logout">Logout</a>
+            </li>
+
+
+        <!-- PUBLIC -->
+        {% else %}
+
+            <li><a href="/">Home</a></li>
+            <li><a href="/verify">Verify Report</a></li>
+            <li><a href="/manual-verify">Manual Verify</a></li>
+            <li><a href="/register">Hospital Register</a></li>
+            <li><a href="/login">Hospital Login</a></li>
+            <li><a href="/admin/login">Admin</a></li>
+
+        {% endif %}
+
+    </ul>
+
+</nav>
+
+<script>
+
+function toggleMenu() {
+    document.getElementById("navLinks").classList.toggle("show");
+}
+
+</script>

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Manual Medical Report Verification{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+<div class="page-wrapper" style="max-width:1200px;margin:auto;">
+
+<div class="details-header">
+
+    <div>
+        <h2>Manual Medical Report Verification</h2>
+        <p style="color:#6b7280;margin-top:6px;">
+            Scan QR code printed on the medical report.
+        </p>
+    </div>
+
+    <span class="admin-badge">
+        MANUAL VERIFY
+    </span>
+
+</div>
+
+<hr class="divider">
+
+<div class="verify-card" style="padding:40px;">
+
+    <h3 style="font-size:18px;margin-bottom:6px;">
+        QR Code Verification
+    </h3>
+
+    <p style="font-size:15px;color:#6b7280;">
+        Scan the QR code to check if report is registered.
+    </p>
+
+    <div class="qr-wrapper">
+
+        <div id="reader" style="display:none;"></div>
+
+        <div class="qr-overlay">
+            <div class="scan-line"></div>
+        </div>
+
+    </div>
+
+    <div id="stage1Result"
+         class="verify-status"
+         style="margin-top:18px;font-size:15px;">
+    </div>
+
+</div>
+</div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+
+let latitude = null;
+let longitude = null;
+
+const qr = new Html5Qrcode("reader");
+
+function onScanSuccess(text){
+
+    try{
+
+        const url = new URL(text);
+        const token = url.searchParams.get("token");
+
+        fetch(`/manual-verify/${token}?lat=${latitude}&lon=${longitude}`)
+        .then(res => res.json())
+        .then(data => {
+
+            if(data.status === "matched"){
+
+                document.getElementById("stage1Result").innerHTML =
+                    "✔ Report Matched";
+
+                Swal.fire({
+                    icon:"success",
+                    title:"Report Matched",
+                    text:"Opening report viewer..."
+                }).then(()=>{
+                    window.location.href = `/view-report/${data.report_id}`;
+                });
+
+            }else{
+
+                document.getElementById("stage1Result").innerHTML =
+                    "❌ Report Not Matched";
+
+                Swal.fire({
+                    icon:"error",
+                    title:"Report Not Matched"
+                });
+
+            }
+
+        });
+
+        qr.stop();
+
+    }catch{
+        Swal.fire("Invalid QR Code");
+    }
+
+}
+
+function startQRScanner(){
+
+    qr.start(
+        { facingMode: "environment" },
+        { fps:10, qrbox:250 },
+        onScanSuccess
+    );
+
+}
+
+function requireLocation(){
+
+    document.getElementById("reader").style.display = "none";
+
+    Swal.fire({
+        title: "Location Access Required",
+        text: "Please allow location to verify report",
+        icon: "warning",
+        confirmButtonText: "Allow Location",
+        allowOutsideClick:false
+    }).then(()=>{
+
+        if(!navigator.geolocation){
+            Swal.fire("Location not supported");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position){
+
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+
+                document.getElementById("reader").style.display = "block";
+
+                startQRScanner();
+
+            },
+
+            function(){
+                Swal.fire("Location permission denied");
+            },
+
+            {
+                enableHighAccuracy:false,
+                timeout:15000,
+                maximumAge:60000
+            }
+        );
+
+    });
+}
+
+requireLocation();
+
+</script>
+
+{% endblock %}

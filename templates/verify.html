@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}Verify Medical Report{% endblock %}
+
+{% block content %}
+<style>
+@keyframes spinBtn {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+<div class="dashboard-container">
+
+    <!-- ✅ WIDER PAGE -->
+    <div class="page-wrapper" style="max-width:1200px;margin:auto;">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header" style="padding:22px 28px;">
+
+            <div>
+                <h2 style="font-size:24px;">Medical Report Verification</h2>
+                <p style="color:#6b7280;margin-top:6px;font-size:15px;">
+                    Verify authenticity using QR code and blockchain hash
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                VERIFICATION PORTAL
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= TWO STAGE GRID ================= -->
+        <div class="verify-grid" style="gap:60px;">
+
+            <!-- ================= STAGE 1 ================= -->
+            <div class="verify-card" style="padding:40px;">
+
+                <h3 style="font-size:18px;margin-bottom:6px;">
+                    Stage 1: QR Code Verification
+                </h3>
+
+                <p style="font-size:15px;color:#6b7280;">
+                    Scan QR code printed on the medical report.
+                </p>
+
+                <!-- BIG QR AREA -->
+                <div class="qr-wrapper">
+
+   <div id="reader" style="display:none;"></div>
+
+    <!-- Scanner overlay -->
+    <div class="qr-overlay">
+        <div class="scan-line"></div>
+    </div>
+
+</div>
+
+                <div id="stage1Result"
+                     class="verify-status"
+                     style="margin-top:18px;font-size:15px;">
+                </div>
+
+            </div>
+
+            <!-- ================= STAGE 2 ================= -->
+            <div class="verify-card" style="padding:40px;">
+
+                <h3 style="font-size:18px;margin-bottom:6px;">
+                    Stage 2: PDF Integrity Verification
+                </h3>
+
+                <p style="font-size:15px;color:#6b7280;">
+                    Upload the medical report PDF to verify authenticity.
+                </p>
+
+               <form id="verifyForm"
+      method="POST"
+      enctype="multipart/form-data"
+      style="margin-top:25px;"
+      onsubmit="return attachVerifyLocation()">
+
+    <!-- Hidden location fields -->
+    <input type="hidden" name="latitude" id="verify_latitude">
+    <input type="hidden" name="longitude" id="verify_longitude">
+    <input type="hidden" name="location" id="verify_location">
+
+    <div class="form-group">
+        <input type="text"
+               id="report_id"
+               name="report_id"
+               placeholder="Scan QR to auto-fill"
+               readonly
+               required>
+    </div>
+
+    <div class="form-group">
+        <input type="file"
+       name="report_file"
+       accept="application/pdf,image/*"
+       required>
+    </div>
+
+   <button type="submit"
+        id="verifyBtn"
+        class="form-btn"
+        style="margin-top:15px;">
+
+    <span id="verifyBtnText">Verify Report</span>
+
+    <span id="verifyBtnLoader" style="
+        display:none;
+        margin-left:8px;
+        border:3px solid #fff;
+        border-top:3px solid transparent;
+        border-radius:50%;
+        width:16px;
+        height:16px;
+        animation:spinBtn 1s linear infinite;
+    "></span>
+
+</button>
+
+</form>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= QR SCANNER ================= -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+const qr = new Html5Qrcode("reader");
+
+function onScanSuccess(text) {
+    try {
+        const url = new URL(text);
+        const token = url.searchParams.get("token");
+
+        fetch(`/qr-status-by-token/${token}`)
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.status === "registered") {
+
+                    document.getElementById("report_id").value = data.report_id;
+
+                    document.getElementById("stage1Result").innerHTML =
+                        "✔ Report Registered<br>" +
+                        "<b>Issued By:</b> " +
+(data.branch
+    ? data.hospital + " – " + data.branch
+    : data.hospital + " – Main") +
+"<br>" +
+"<b>Issue Date:</b> " + data.issue_date;
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'QR Verified',
+                        text: 'Report is registered on blockchain.'
+                    });
+
+                } else {
+
+                    document.getElementById("stage1Result").innerHTML =
+                        "❌ Unregistered or fake report";
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid QR',
+                        text: 'Report not found on blockchain.'
+                    });
+                }
+            });
+
+        qr.stop();
+
+    } catch {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid QR Code'
+        });
+    }
+}
+
+function blockVerification(reason){
+
+    document.getElementById("reader").style.display = "none";
+
+    Swal.fire({
+
+        icon:"error",
+
+        title:"Verification Blocked",
+
+        html: `
+            ${reason}<br><br>
+            Location permission is mandatory to verify reports.
+        `,
+
+        confirmButtonText:"Retry",
+
+        allowOutsideClick:false
+
+    }).then(()=>{
+
+        requireLocationForVerify();
+
+    });
+
+}
+function startQRScanner(){
+
+    qr.start(
+        { facingMode: "environment" },
+        {
+            fps:10,
+            qrbox:250
+        },
+        onScanSuccess
+    );
+
+}
+function requireLocationForVerify(){
+
+    // Hide scanner initially
+    document.getElementById("reader").style.display = "none";
+
+    Swal.fire({
+
+        title: "Location Access Required",
+
+        html: `
+            <b>This system requires location permission.</b><br><br>
+            Please allow location to verify medical reports.
+        `,
+
+        icon: "warning",
+
+        confirmButtonText: "Allow Location",
+
+        allowOutsideClick: false,
+        allowEscapeKey: false
+
+    }).then(()=>{
+
+        if(!navigator.geolocation){
+
+            blockVerification("Location not supported");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position){
+
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                document.getElementById("verify_latitude").value = lat;
+                document.getElementById("verify_longitude").value = lon;
+                document.getElementById("verify_location").value = lat+","+lon;
+
+                // Show scanner only after location granted
+                document.getElementById("reader").style.display = "block";
+
+                startQRScanner();
+
+            },
+
+            function(){
+
+                blockVerification("Location permission denied");
+
+            },
+
+            {
+                enableHighAccuracy:false,
+                timeout:15000,
+                maximumAge:60000
+            }
+
+        );
+
+    });
+
+}
+
+// RUN when page loads
+requireLocationForVerify();
+</script>
+{% if message %}
+<script>
+
+let changesHtml = "";
+
+{% if changed_content %}
+changesHtml += `
+    <div style="margin-top:15px;text-align:left;">
+        <h4 style="color:#dc2626;margin-bottom:10px;">
+            Modified Fields Detected:
+        </h4>
+`;
+
+{% for change in changed_content %}
+changesHtml += `
+    <div style="
+        margin-bottom:15px;
+        padding:12px;
+        border-radius:8px;
+        background:#fef2f2;
+        border:1px solid #fecaca;
+    ">
+        <div style="color:#b91c1c;font-weight:bold;">Original:</div>
+        <div style="margin-bottom:5px;">{{ change.original }}</div>
+
+        <div style="color:#166534;font-weight:bold;">Modified:</div>
+        <div>{{ change.modified }}</div>
+    </div>
+`;
+{% endfor %}
+
+changesHtml += `</div>`;
+{% endif %}
+
+Swal.fire({
+    icon: '{{ "success" if status == "success" else "error" }}',
+    title: '{{ "Verification Successful" if status == "success" else "Verification Failed" }}',
+    html: `
+        <div style="margin-bottom:10px;">
+            {{ message }}
+        </div>
+        ${changesHtml}
+    `,
+    width:750,
+    confirmButtonText:"OK",
+    allowOutsideClick:false
+}).then(()=>{
+    window.location.href = "{{ redirect_url }}";
+});
+
+</script>
+{% endif %}
+<script>
+function attachVerifyLocation(){
+
+    const lat = document.getElementById("verify_latitude").value;
+    const lon = document.getElementById("verify_longitude").value;
+
+    if(!lat || !lon){
+
+        Swal.fire({
+            icon:'error',
+            title:'Location Required'
+        });
+
+        return false;
+    }
+
+    document.getElementById("verifyBtnText").innerText="Verifying...";
+    document.getElementById("verifyBtnLoader").style.display="inline-block";
+    document.getElementById("verifyBtn").disabled=true;
+
+    return true;
+}
+</script>
+{% endblock %}

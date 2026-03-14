@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Download Verification History{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+  <div class="dashboard-card" style="max-width:1000px;margin:auto;">
+
+    <h2>{{ title }}</h2>
+
+    <table class="admin-table">
+      <tr>
+        <th>Report ID</th>
+        <th>Verified By</th>
+        <th>Hospital</th>
+        <th>Date</th>
+        <th>Result</th>
+      </tr>
+
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.reportId }}</td>
+        <td>{{ log.verifiedBy }}</td>
+        <td>
+          {{ log.verifiedByHospitalName }}
+          {% if log.branchName %}
+            – {{ log.branchName }}
+          {% endif %}
+        </td>
+        <td>{{ log.verifiedAt.strftime('%d %b %Y %I:%M %p') }}</td>
+        <td>{{ log.result }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div style="text-align:center;margin-top:30px;">
+      <button onclick="window.print()" class="form-btn">
+        🖨 Print / Save as PDF
+      </button>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

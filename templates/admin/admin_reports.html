@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Hospital Reports{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+    <div class="page-wrapper">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header">
+            <div>
+                <h2>Hospital Uploaded Reports</h2>
+                <p style="color:#6b7280;margin-top:6px;">
+                    Hospital ID:
+                    <strong>{{ hospital_id }}</strong>
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                REPORT REGISTRY
+            </span>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= TOTAL + SEARCH ================= -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:15px;
+            margin-bottom:18px;
+        ">
+
+            <!-- TOTAL -->
+            <p style="color:#6b7280;font-weight:500;margin:0;">
+                Total Reports: {{ reports|length }}
+            </p>
+
+            <!-- SEARCH -->
+            <div style="position: relative; width: 280px;">
+
+                <input
+                    type="text"
+                    id="reportSearch"
+                    placeholder="Search report ID / hash..."
+                    style="
+                        width:100%;
+                        padding:12px 42px 12px 16px;
+                        border-radius:10px;
+                        border:1.5px solid #d1d5db;
+                        font-size:14px;
+                    "
+                >
+
+                <span style="
+                    position:absolute;
+                    right:14px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    font-size:18px;
+                    color:#6b7280;
+                    pointer-events:none;">
+                    🔍
+                </span>
+
+            </div>
+
+        </div>
+
+        {% if reports|length == 0 %}
+            <p style="color:#6b7280;">No reports uploaded yet.</p>
+        {% else %}
+
+        <!-- ================= TABLE ================= -->
+        <div class="table-wrapper">
+            <table class="admin-table modern-table">
+
+                <tr>
+    <th>S.No</th>
+    <th>Report ID</th>
+
+    <th>Uploaded Hospital</th>
+    <th>Hospital Address</th>
+
+    <th>Upload Time</th>
+    <th>Location</th>
+    <th>IP Address</th>
+
+    <th>Blockchain Hash</th>
+    <th>File</th>
+    <th>Actions</th>
+</tr>
+                {% for r in reports %}
+<tr>
+
+<td><strong>{{ loop.index }}</strong></td>
+
+<td class="report-id">
+{{ r.report_id }}
+</td>
+
+<td>
+{{ r.hospital_name_full }}
+</td>
+
+<td>
+{{ r.hospital_address }}
+</td>
+
+<td>
+{{ r.uploaded_at_str if r.uploaded_at_str else "Unknown" }}
+</td>
+
+<td>
+{{ r.location if r.location else "Not provided" }}
+</td>
+
+<td>
+{{ r.ip_address if r.ip_address else "Unknown" }}
+</td>
+
+<td class="hash-text">
+{{ r.hash }}
+</td>
+
+<td>
+<a href="/view-report/{{ r.report_id }}"
+class="btn-action view">
+View Report
+</a>
+</td>
+
+<td class="action-group">
+
+<div class="action-buttons">
+
+<a href="/hospital/report/{{ r.report_id }}/verifications"
+class="btn-action logs">
+Verification Logs
+</a>
+
+<a href="#"
+class="btn-action delete"
+onclick="confirmDelete('/admin/report/delete/{{ r.report_id }}?success=deleted')">
+Delete
+</a>
+
+</div>
+
+</td>
+
+</tr>
+{% endfor %}
+            </table>
+        </div>
+
+        {% endif %}
+    </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+
+/* LIVE SEARCH */
+document.getElementById("reportSearch").addEventListener("keyup", function () {
+    const input = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".admin-table tr");
+
+    rows.forEach((row, index) => {
+        if (index === 0) return;
+        row.style.display = row.innerText.toLowerCase().includes(input)
+            ? ""
+            : "none";
+    });
+});
+
+/* SWEETALERT DELETE */
+function confirmDelete(url) {
+    Swal.fire({
+        title: 'Delete Medical Report?',
+        text: 'This report will be permanently removed from blockchain records.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+</script>
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+/* REPORT DELETE SUCCESS */
+if (params.get("success") === "deleted") {
+
+    Swal.fire({
+        icon: "success",
+        title: "Report Deleted Successfully",
+        text: "The medical report has been removed from registry.",
+        confirmButtonColor: "#16a34a"
+    });
+
+}
+
+</script>
+{% endblock %}

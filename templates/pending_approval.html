@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Approval Pending{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper" style="max-width:700px;margin:auto;">
+
+        <!-- HEADER -->
+        <div class="details-header">
+
+            <div>
+                <h2>Approval Pending ⏳</h2>
+
+                <p style="color:#6b7280;margin-top:6px;font-size:15px;">
+                    Your hospital account is currently under administrative review
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                PENDING
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- CARD -->
+        <div class="upload-box"
+             style="
+                text-align:center;
+                padding:50px 40px;
+                max-width:600px;
+                margin:auto;
+             ">
+
+            <!-- TITLE -->
+            <h3 style="
+                margin-bottom:15px;
+                font-size:20px;
+                font-weight:600;
+                color:#1f2937;
+            ">
+                Account Verification in Progress
+            </h3>
+
+            <!-- PARAGRAPH 1 -->
+            <p style="
+                color:#6b7280;
+                font-size:15px;
+                line-height:1.8;
+                margin-bottom:15px;
+            ">
+                Your hospital registration has been successfully submitted and is currently
+                awaiting administrator approval. This verification process ensures that only
+                authorized hospitals and laboratories can access the MediVerify platform.
+            </p>
+
+            <!-- PARAGRAPH 2 -->
+            <p style="
+                color:#6b7280;
+                font-size:15px;
+                line-height:1.8;
+                margin-bottom:25px;
+            ">
+                Once approved, you will be able to upload medical reports, verify authenticity,
+                and manage your hospital dashboard securely using blockchain verification.
+                Please check back later.
+            </p>
+
+            <!-- STATUS BOX -->
+            <div style="
+                background:#f9fafb;
+                border-radius:10px;
+                padding:15px;
+                margin-bottom:25px;
+                border:1px solid #e5e7eb;
+                font-size:14px;
+                color:#374151;
+            ">
+                ⏱️ Estimated approval time: <strong>Within 24 hours</strong>
+            </div>
+
+            <!-- BUTTON -->
+            <button href="/logout"
+               class="form-btn"
+               style="
+                    display:inline-block;
+                    padding:14px 60px;
+                    font-size:16px;
+                    border-radius:10px;
+               ">
+                Logout
+        </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

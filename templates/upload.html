@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}Upload Medical Report{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper" style="max-width:720px;margin:auto;">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header">
+
+            <div>
+                <h2>Upload Medical Report</h2>
+                <p style="color:#6b7280;margin-top:6px;">
+                    Secure medical report using QR & blockchain hash
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                REPORT UPLOAD
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= FORM ================= -->
+        <div class="upload-box">
+
+            <form id="uploadForm"
+                  method="POST"
+                  enctype="multipart/form-data"
+                  onsubmit="return attachLocation()">
+
+                <!-- Hidden location fields -->
+                <input type="hidden" name="latitude" id="latitude">
+                <input type="hidden" name="longitude" id="longitude">
+                <input type="hidden" name="location" id="location">
+
+                <!-- Report ID -->
+                <div class="form-group">
+                    <label>Report ID</label>
+                    <input type="text"
+                           name="report_id"
+                           id="report_id"
+                           value="{{ suggested_id }}"
+                           placeholder="Enter Unique Report ID (Example: {{ suggested_id }})"
+                           required>
+                </div>
+
+                <!-- File -->
+                <div class="form-group">
+                    <label>Select Report File</label>
+                    <input type="file"
+                           name="report_file"
+                           id="report_file"
+                           accept="application/pdf,image/png,image/jpeg"
+                           required>
+                </div>
+
+                <!-- Upload Button -->
+                <button type="submit"
+                        id="uploadBtn"
+                        class="form-btn"
+                        style="width:100%;display:flex;justify-content:center;align-items:center;gap:10px;">
+
+                    <span id="btnText">Upload & Secure Report</span>
+
+                    <span id="btnLoader" style="display:none;">
+                        <span class="spinner"></span>
+                        Uploading...
+                    </span>
+
+                </button>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer"
+                     style="display:none;margin-top:15px;">
+
+                    <div style="
+                        width:100%;
+                        background:#e5e7eb;
+                        border-radius:10px;
+                        overflow:hidden;">
+
+                        <div id="progressBar"
+                             style="
+                             width:0%;
+                             height:10px;
+                             background:#2563eb;
+                             transition:width 0.3s;">
+                        </div>
+
+                    </div>
+
+                    <p id="progressText"
+                       style="font-size:13px;color:#6b7280;margin-top:5px;">
+                       Uploading... 0%
+                    </p>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- ================= PREVIEW ================= -->
+        {% if qr_image %}
+        <div class="upload-preview-modern" id="previewSection">
+
+            <h3>✅ Report Secured Successfully</h3>
+
+            <img src="{{ qr_image }}" alt="QR Code">
+
+            <p style="margin-top:10px;">
+                QR code securely embedded into
+                <strong>{{ file_type }}</strong> and stored on blockchain.
+            </p><br>
+
+            <a href="{{ download_link }}"
+               class="btn-action view"
+               onclick="handleDownload(event)">
+                ⬇ Download Final {{ file_type }}
+            </a>
+
+            <!-- Final message -->
+            <p id="finalMessage"
+               style="
+               display:none;
+               margin-top:20px;
+               padding:14px;
+               background:#ecfdf5;
+               border:1px solid #10b981;
+               border-radius:10px;
+               color:#065f46;
+               font-weight:500;">
+
+               📄 You can now submit this final {{ file_type }}
+               securely to the patient. This file contains blockchain
+               verification and QR authentication.
+
+            </p>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ================= SUCCESS ALERT ================= -->
+{% if message %}
+<script>
+Swal.fire({
+    icon:'success',
+    title:'Upload Successful',
+    html:`
+        <b>Report ID:</b> {{ report_id }}<br>
+        Blockchain secured successfully.
+    `,
+    confirmButtonColor:'#2563eb'
+});
+</script>
+{% endif %}
+
+
+<!-- ================= ERROR ALERT ================= -->
+{% if error %}
+<script>
+Swal.fire({
+    icon:'error',
+    title:'Upload Failed',
+    text:'{{ error }}'
+});
+</script>
+{% endif %}
+
+
+<!-- ================= CSS ================= -->
+<style>
+
+.spinner {
+
+    width:18px;
+    height:18px;
+    border:3px solid white;
+    border-top:3px solid transparent;
+    border-radius:50%;
+
+    animation:spin 1s linear infinite;
+}
+
+@keyframes spin {
+
+    from { transform:rotate(0deg); }
+    to { transform:rotate(360deg); }
+
+}
+
+</style>
+
+
+<!-- ================= JS ================= -->
+<script>
+
+function startLoader(){
+
+    document.getElementById("uploadBtn").disabled = true;
+
+    document.getElementById("btnText").style.display="none";
+
+    document.getElementById("btnLoader").style.display="inline-flex";
+
+    document.getElementById("progressContainer").style.display="block";
+
+}
+
+
+function simulateProgress(){
+
+    let progress = 0;
+
+    const bar = document.getElementById("progressBar");
+
+    const text = document.getElementById("progressText");
+
+    const interval = setInterval(()=>{
+
+        progress += Math.random()*15;
+
+        if(progress>=90){
+            clearInterval(interval);
+        }
+
+        bar.style.width = progress+"%";
+
+        text.innerText = "Uploading... " + Math.floor(progress)+"%";
+
+    },300);
+
+}
+
+
+function attachLocation(){
+
+    startLoader();
+    simulateProgress();
+
+    Swal.fire({
+
+        title: "Location Required",
+        html: `
+            <b>This action requires location access.</b><br><br>
+            Please allow location to upload medical report.
+        `,
+
+        icon: "warning",
+
+        showCancelButton: true,
+
+        confirmButtonText: "Allow Location",
+
+        cancelButtonText: "Cancel Upload",
+
+        confirmButtonColor: "#2563eb",
+
+        allowOutsideClick: false
+
+    }).then((result)=>{
+
+        if(!result.isConfirmed){
+
+            Swal.fire({
+                icon:'error',
+                title:'Upload Blocked',
+                text:'Location permission is required to upload report.'
+            });
+
+            stopLoader();
+            return;
+        }
+
+        if(!navigator.geolocation){
+
+            Swal.fire({
+                icon:'error',
+                title:'Location not supported'
+            });
+
+            stopLoader();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position){
+
+                document.getElementById("latitude").value =
+                    position.coords.latitude;
+
+                document.getElementById("longitude").value =
+                    position.coords.longitude;
+
+                document.getElementById("location").value =
+                    position.coords.latitude + "," +
+                    position.coords.longitude;
+
+                document.getElementById("uploadForm").submit();
+
+            },
+
+            function(){
+
+                Swal.fire({
+
+                    icon:'error',
+
+                    title:'Location Required',
+
+                    text:'Please allow location to upload report.'
+
+                });
+
+                stopLoader();
+
+            },
+
+            {
+                enableHighAccuracy:false,
+                timeout:15000,
+                maximumAge:60000
+            }
+
+        );
+
+    });
+
+    return false;
+}
+
+function stopLoader(){
+
+    document.getElementById("uploadBtn").disabled = false;
+
+    document.getElementById("btnText").style.display="inline";
+
+    document.getElementById("btnLoader").style.display="none";
+
+}
+
+function handleDownload(event){
+
+    event.preventDefault();
+
+    const downloadUrl = event.currentTarget.href;
+    const fileType = "{{ file_type }}";
+    const role = "{{ role }}";
+
+    // download file
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = "";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // decide redirect dashboard
+    let dashboardUrl = "/hospital-dashboard";
+
+    if(role === "main"){
+        dashboardUrl = "/main-dashboard";
+    }
+
+    // show popup
+    setTimeout(()=>{
+
+        Swal.fire({
+
+            icon: 'success',
+
+            title: 'Download Completed',
+
+            html: `
+                <div style="text-align:left; line-height:1.6;">
+
+                    <div style="text-align:center; margin-bottom:10px;">
+    <strong style="font-size:18px;">
+        ${fileType} downloaded successfully.
+    </strong>
+</div>
+                    <div style="
+                        margin-top:10px;
+                        padding:12px;
+                        background:#f0fdf4;
+                        border:1px solid #10b981;
+                        border-radius:8px;
+                        color:#065f46;
+                    ">
+                        📄 You can now submit this final <strong>${fileType}</strong>
+                        securely to the patient.<br>
+                        This version contains QR authentication and blockchain verification.
+                    </div>
+
+                </div>
+            `,
+
+            confirmButtonText: "Go to Dashboard",
+
+            confirmButtonColor: "#2563eb",
+
+            allowOutsideClick: false
+
+        }).then(()=>{
+
+            window.location.href = dashboardUrl;
+
+        });
+
+    },500);
+
+}
+
+</script>
+
+{% endblock %}

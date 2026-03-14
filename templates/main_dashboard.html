@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+{% block title %}Main Hospital Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header">
+
+            <div class="profile-box">
+                <div class="profile-icon">
+                    <div class="head"></div>
+                    <div class="body"></div>
+                </div>
+
+                <div class="profile-details">
+                    <h2>{{ hospital.hospital_name }}</h2>
+                    <span>Main Hospital Administration</span>
+                </div>
+            </div>
+
+            <span class="admin-badge">
+                MAIN HOSPITAL
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= BRANCH SUMMARY ================= -->
+        <div class="admin-stats">
+
+            <div class="stat-card blue">
+                <h3>{{ branches|length }}</h3>
+                <p>Total Branch Hospitals</p>
+            </div>
+
+            <div class="stat-card green">
+                <h3>
+                    {{ branches | selectattr("main_status","equalto","approved") | list | length }}
+                </h3>
+                <p>Main Approved</p>
+            </div>
+
+            <div class="stat-card yellow">
+                <h3>
+                    {{ branches | selectattr("main_status","equalto","pending") | list | length }}
+                </h3>
+                <p>Pending Approval</p>
+            </div>
+
+        </div>
+
+        <!-- ================= HOSPITAL INFO ================= -->
+        <div class="info-grid">
+
+            <div class="info-card">
+                <p>Hospital ID</p>
+                <h4>{{ hospital.hospital_id }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Email</p>
+                <h4>{{ hospital.email }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Address</p>
+                <h4>{{ hospital.address }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Account Type</p>
+                <span class="status approved">Main Hospital</span>
+            </div>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= TITLE + SEARCH ================= -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+            gap:15px;
+        ">
+
+            <h3 class="section-title" style="margin:0;">
+                Branch Hospitals
+            </h3>
+
+            <!-- SEARCH -->
+            <div style="position:relative;width:280px;">
+                <input
+                    type="text"
+                    id="branchSearch"
+                    placeholder="Search branch / ID / email..."
+                    style="
+                        width:100%;
+                        padding:12px 42px 12px 16px;
+                        border-radius:10px;
+                        border:1.5px solid #d1d5db;
+                        font-size:14px;
+                    "
+                >
+                <span style="
+                    position:absolute;
+                    right:14px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    font-size:18px;
+                    color:#6b7280;
+                    pointer-events:none;">
+                    🔍
+                </span>
+            </div>
+
+        </div>
+
+        <!-- ================= TABLE ================= -->
+        <div class="table-wrapper">
+
+            <table class="admin-table modern-table">
+
+                <tr>
+                    <th>S.No</th>
+                    <th>Branch</th>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Main</th>
+                    <th>Actions</th>
+                </tr>
+
+                {% for b in branches %}
+                <tr>
+
+                    <td><strong>{{ loop.index }}</strong></td>
+
+                    <td>
+                        <strong>{{ b.branch_name }}</strong><br>
+                        <small style="color:#6b7280;">{{ b.address }}</small>
+                    </td>
+
+                    <td>{{ b.hospital_id }}</td>
+                    <td>{{ b.email }}</td>
+
+                    <td>
+                        {% if b.admin_status == "approved" %}
+                            <span class="status approved">Approved</span>
+                        {% else %}
+                            <span class="status pending">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if b.main_status == "approved" %}
+                            <span class="status approved">Approved</span>
+                        {% else %}
+                            <span class="status pending">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="action-group">
+{% if b.main_status != "approved" %}
+<a href="#"
+   class="btn-action approve"
+   onclick="confirmMainApprove('{{ b.hospital_id }}')">
+   Approve
+</a>
+{% else %}
+<a href="#"
+   class="btn-action reject"
+   onclick="confirmMainReject('{{ b.hospital_id }}')">
+   Reject
+</a>
+{% endif %}
+                        <a href="/main/branch/{{ b.hospital_id }}/reports"
+                           class="btn-action view">
+                           Reports
+                        </a>
+
+                        <a href="/main/branch/{{ b.hospital_id }}/verifications"
+                           class="btn-action logs">
+                           Verification Logs
+                        </a>
+
+                        <!-- SWEETALERT DELETE -->
+                        <a href="#"
+                           class="btn-action delete"
+                           onclick="confirmDelete('{{ b.hospital_id }}')">
+                           Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;color:#6b7280;">
+                        No branch hospitals registered
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </table>
+
+        </div>
+
+        <hr class="divider">
+
+<!-- ================= REPORTS ================= -->
+<h3 class="section-title">Uploaded Medical Reports</h3>
+
+<!-- TOTAL + SEARCH -->
+<div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:10px 0 25px;
+    flex-wrap:wrap;
+    gap:15px;
+">
+
+    <div style="color:#6b7280;font-weight:600;">
+        Total Reports: {{ reports|length }}
+    </div>
+
+    <!-- SEARCH -->
+    <div style="position: relative; width: 260px;">
+        <input
+            type="text"
+            id="reportSearch"
+            placeholder="Search reports..."
+            style="
+                width:100%;
+                padding:12px 42px 12px 16px;
+                border-radius:10px;
+                border:1.5px solid #d1d5db;
+                font-size:14px;
+            "
+        >
+        <span style="
+            position:absolute;
+            right:14px;
+            top:50%;
+            transform:translateY(-50%);
+            font-size:18px;
+            color:#6b7280;">
+            🔍
+        </span>
+    </div>
+
+</div>
+
+{% if reports|length == 0 %}
+
+<p style="color:#6b7280;">
+    No reports uploaded yet.
+</p>
+
+{% else %}
+
+<div class="table-wrapper">
+
+<table class="admin-table modern-table">
+
+<tr>
+    <th>S.No</th>
+    <th>Report ID</th>
+    <th>Upload Time</th>
+<th>Location</th>
+<th>IP</th>
+    <th>Blockchain Hash</th>
+    <th>File</th>
+    <th>Actions</th>
+</tr>
+
+{% for r in reports %}
+<tr>
+
+<td><strong>{{ loop.index }}</strong></td>
+
+<td class="report-id">{{ r.report_id }}</td>
+<td>{{ r.uploaded_at_str }}</td>
+<td>{{ r.location }}</td>
+<td>{{ r.ip_address }}</td>
+
+<!-- FULL HASH WITHOUT COPY -->
+<td class="hash-text">
+    {{ r.hash }}
+</td>
+
+<td>
+    <a href="/view-report/{{ r.report_id }}"
+       class="btn-action view">
+       View Report
+    </a>
+</td>
+
+<td class="action-group">
+
+    <a href="/hospital/report/{{ r.report_id }}/verifications"
+       class="btn-action logs">
+       Verification Logs
+    </a>
+
+    <a href="#"
+       class="btn-action delete"
+       onclick="confirmDeleteReport('{{ r.report_id }}')">
+       Delete
+    </a>
+
+</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endif %}
+
+    </div>
+
+</div>
+
+<!-- ================= LIVE SEARCH ================= -->
+<script>
+document.getElementById("branchSearch").addEventListener("keyup", function () {
+    const input = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".admin-table tr");
+
+    rows.forEach((row, index) => {
+        if (index === 0) return;
+        row.style.display = row.innerText.toLowerCase().includes(input)
+            ? ""
+            : "none";
+    });
+});
+</script>
+
+<!-- ================= SWEETALERT DELETE ================= -->
+<script>
+function confirmDelete(hospitalId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This branch hospital will be deleted permanently.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/main/delete/${hospitalId}`;
+        }
+    });
+}
+</script>
+
+{% if session.get("main_login_success") %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Login Successful',
+    text: 'Welcome to Main Hospital Dashboard'
+});
+</script>
+{% set _ = session.pop("main_login_success") %}
+{% endif %}
+
+<script>
+function confirmDeleteReport(reportId) {
+    Swal.fire({
+        title: 'Delete Medical Report?',
+        text: 'This report will be permanently deleted.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/main/report/delete/${reportId}`;
+        }
+    });
+}
+</script>
+
+<script>
+
+/* APPROVE BRANCH (MAIN HOSPITAL) */
+function confirmMainApprove(branchId) {
+
+    Swal.fire({
+        title: 'Approve Branch?',
+        text: 'Branch hospital will gain main hospital approval.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            window.location.href =
+                `/main/approve/${branchId}?success=main_branch_approved`;
+
+        }
+
+    });
+
+}
+
+
+/* REJECT BRANCH */
+function confirmMainReject(branchId) {
+
+    Swal.fire({
+        title: 'Reject Branch?',
+        text: 'Branch hospital approval will be removed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            window.location.href =
+                `/main/reject/${branchId}?success=main_branch_rejected`;
+
+        }
+
+    });
+
+}
+
+
+/* DELETE BRANCH */
+function confirmDelete(branchId) {
+
+    Swal.fire({
+        title: 'Delete Branch?',
+        text: 'Branch hospital and all reports will be permanently deleted.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            window.location.href =
+                `/main/delete/${branchId}?success=main_branch_deleted`;
+
+        }
+
+    });
+
+}
+
+
+/* DELETE REPORT */
+function confirmDeleteReport(reportId) {
+
+    Swal.fire({
+        icon: "error",
+        title: "Delete Not Allowed",
+        text: "Main hospitals cannot delete reports. Only Admin can delete.",
+        confirmButtonColor: "#dc2626",
+        confirmButtonText: "OK"
+    });
+
+}
+
+</script>
+{% if request.args.get("success") == "main_branch_approved" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Branch Approved',
+    text: 'Branch hospital approved successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+{% if request.args.get("success") == "main_branch_rejected" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Branch Rejected',
+    text: 'Branch hospital rejected successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+{% if request.args.get("success") == "main_branch_deleted" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Branch Deleted',
+    text: 'Branch hospital deleted successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("error") === "delete_not_allowed") {
+
+    Swal.fire({
+        icon: "error",
+        title: "Delete Not Allowed",
+        text: "Only Admin can delete reports.",
+        confirmButtonColor: "#dc2626"
+    });
+
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper" style="max-width:520px;margin:auto;">
+
+        <!-- HEADER -->
+        <div class="details-header">
+            <div>
+                <h2>Administrator Login</h2>
+                <p style="color:#6b7280;margin-top:6px;">
+                    Authorized system administrator access only
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                ADMIN
+            </span>
+        </div>
+
+        <hr class="divider">
+
+        <!-- LOGIN CARD -->
+        <div class="upload-box">
+
+            <form method="POST">
+
+                <div class="form-group">
+                    <label>Admin Username</label>
+                    <input type="text"
+                           name="username"
+                           placeholder="Enter admin username"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label>Admin Password</label>
+                    <input type="password"
+                           name="password"
+                           placeholder="Enter admin password"
+                           required>
+                </div>
+
+                <button type="submit"
+                        class="form-btn"
+                        style="width:100%;margin-top:10px;">
+                    Login
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% if error %}
+<script>
+Swal.fire({
+    icon: 'error',
+    title: 'Admin Login Failed',
+    text: '{{ error }}'
+});
+</script>
+{% endif %}
+
+{% endblock %}

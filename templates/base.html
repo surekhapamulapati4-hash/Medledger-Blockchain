@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MedLedger{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+
+    {% include "navbar.html" %}
+
+    <!-- ================= LOGOUT SUCCESS ALERT ================= -->
+    {% if session.get("logout_success") %}
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+            Swal.fire({
+                icon: "success",
+                title: "Logged out successfully",
+                text: "You have been securely logged out.",
+                confirmButtonColor: "#2563eb",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+        });
+
+    </script>
+
+    {% set _ = session.pop("logout_success") %}
+
+    {% endif %}
+
+
+    <!-- PAGE CONTENT -->
+    {% block content %}{% endblock %}
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="footer-content">
+
+            <div class="footer-brand">
+                <h3>🩺 MedLedger</h3>
+                <p>
+                    Blockchain-based Medical Report Verification System
+                    ensuring authenticity, transparency, and trust.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <a href="/">Home</a>
+                <a href="/verify">Verify Report</a>
+                <a href="/manual-verify">Manual Verify</a>
+                <a href="/register">Hospital Registration</a>
+                <a href="/login">Hospital Login</a>
+                <a href="/admin/login">Admin Panel</a>
+            </div>
+
+            <div class="footer-project">
+                <h4>Project Info</h4>
+                <p>Final Year B.Tech Project</p>
+                <p>Domain: Blockchain & Cyber Security</p>
+                <p class="footer-tags">
+                    Secure • Transparent • Tamper-Proof
+                </p>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 MedLedger — All Rights Reserved
+        </div>
+
+    </footer>
+
+</body>
+</html>

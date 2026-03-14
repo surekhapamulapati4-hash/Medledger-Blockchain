@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}MedLedger | Home{% endblock %}
+
+{% block content %}
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+
+    <div class="hero-wrapper">
+
+        <!-- LEFT CONTENT -->
+        <div class="hero-content">
+
+            <span class="hero-badge">
+                🔐 Blockchain-Based Medical Report Authenticity Verification System
+            </span>
+
+            <h1>
+                Secure & Verify Medical Reports<br>
+                Using <span>Blockchain Technology</span>
+            </h1>
+
+            <p>
+                MedLedger prevents forged and tampered medical reports by storing
+                cryptographic hashes on blockchain and validating authenticity
+                through QR-based verification.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="/verify" class="btn-verify">Verify Medical Report</a>
+                <a href="/register" class="btn-register">Hospital Registration</a>
+            </div>
+
+        </div>
+
+        <!-- RIGHT ROUND IMAGE -->
+        <div class="hero-image">
+            <img src="/static/images/hero-medical.png" alt="Medical Verification">
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= PROBLEM SECTION ================= -->
+<section class="why">
+
+    <h2>Why MedLedger is Needed?</h2>
+
+    <div class="why-grid">
+
+        <div class="why-card">
+            <h3>1. Fake Medical Reports</h3>
+            <p>
+                Manual and paper-based medical reports can be forged or altered,
+                leading to serious health and legal issues.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>2. No Verification System</h3>
+            <p>
+                Hospitals lack a centralized and trusted system to verify
+                the originality of issued medical documents.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>3. Data Tampering</h3>
+            <p>
+                Without cryptographic protection, medical data can be modified
+                without detection.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>4. MedLedger Solution</h3>
+            <p>
+                Blockchain ensures immutability while QR codes enable instant
+                public verification of reports.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= SYSTEM FEATURES ================= -->
+<section class="how">
+
+    <h2>System Features</h2>
+
+    <div class="steps">
+
+        <div class="step">
+            <span>1</span>
+            <p>
+                Only verified hospitals are allowed to upload medical reports.
+            </p>
+        </div>
+
+        <div class="step">
+            <span>2</span>
+            <p>
+                Each report is converted into a cryptographic hash and stored
+                securely on blockchain.
+            </p>
+        </div>
+
+        <div class="step">
+            <span>3</span>
+            <p>
+                A QR code is generated and printed on the medical report.
+            </p>
+        </div>
+
+        <div class="step">
+            <span>4</span>
+            <p>
+                Anyone can scan the QR and upload the report PDF for verification.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= TRUST SECTION ================= -->
+<section class="why">
+
+    <h2>Why Trust MedLedger?</h2>
+
+    <div class="why-grid">
+
+        <div class="why-card">
+            <h3>⛓ Blockchain Secured</h3>
+            <p>
+                Immutable blockchain hashes prevent unauthorized modification
+                of medical documents.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>📱 QR-Based Validation</h3>
+            <p>
+                Instant verification using camera-based QR scanning.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>🏥 Hospital Authorized</h3>
+            <p>
+                Only registered hospitals can issue verified medical reports.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <h3>🔍 Tamper Detection</h3>
+            <p>
+                Any change in the PDF automatically fails verification.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

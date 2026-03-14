@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Branch Verification Logs{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header">
+
+            <div>
+                <h2>Branch Verification Logs</h2>
+                <p style="color:#6b7280;margin-top:6px;">
+                    Branch:
+                    <strong>{{ branch.branch_name }}</strong><br>
+                    Branch ID:
+                    <strong>{{ branch.hospital_id }}</strong>
+                </p>
+            </div>
+
+            <span class="admin-badge">
+                BRANCH AUDIT LOG
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= TOTAL + SEARCH ================= -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:15px;
+            margin-bottom:18px;
+        ">
+
+            <!-- TOTAL (light) -->
+            <p style="color:#6b7280;font-weight:500;margin:0;">
+                Total Verification Logs: {{ logs|length }}
+            </p>
+
+            <!-- SEARCH -->
+            <div style="position: relative; width: 280px;">
+
+                <input
+                    type="text"
+                    id="logSearch"
+                    placeholder="Search report ID..."
+                    style="
+                        width:100%;
+                        padding:12px 42px 12px 16px;
+                        border-radius:10px;
+                        border:1.5px solid #d1d5db;
+                        font-size:14px;
+                    "
+                >
+
+                <span
+                    style="
+                        position:absolute;
+                        right:14px;
+                        top:50%;
+                        transform:translateY(-50%);
+                        font-size:18px;
+                        color:#6b7280;
+                        pointer-events:none;
+                    "
+                >
+                    🔍
+                </span>
+
+            </div>
+
+        </div>
+
+        <!-- ================= TABLE ================= -->
+        <div class="table-wrapper">
+
+            <table class="admin-table modern-table">
+
+<tr>
+    <th>S.No</th>
+    <th>Report ID</th>
+    <th>Verified At</th>
+
+    <th>Uploaded Hospital</th>
+    <th>Hospital Address</th>
+
+    <th>Verified By</th>
+    <th>Verifier Address</th>
+
+    <th>Location</th>
+    <th>IP Address</th>
+
+    <th>Original Hash</th>
+    <th>Scanned Hash</th>
+
+    <th>Result</th>
+    <th>Action</th>
+</tr>
+
+{% for log in logs %}
+<tr>
+
+    <td><strong>{{ loop.index }}</strong></td>
+
+    <td class="report-id">
+        {{ log.reportId }}
+    </td>
+
+    <!-- Verified Date + Time -->
+    <td>
+        {{ log.verifiedAt.strftime('%d %b %Y') }}<br>
+        <small style="color:#6b7280;">
+            {{ log.verifiedAt.strftime('%I:%M %p') }}
+        </small>
+    </td>
+
+    <!-- Uploaded Hospital -->
+    <td>
+        {{ log.reportHospitalNameFull }}
+    </td>
+
+    <!-- Hospital Address -->
+    <td>
+        {{ log.reportHospitalAddress }}
+    </td>
+
+    <!-- Verified By -->
+   <td>
+    {% if log.verifierNameFull %}
+        {{ log.verifierNameFull }}
+    {% elif log.verifiedByHospitalName %}
+        {{ log.verifiedByHospitalName }}
+    {% elif log.verifiedBy == "Admin" %}
+        System Admin
+    {% else %}
+        Public User
+    {% endif %}
+</td>
+
+    <!-- Verifier Address -->
+    <td>
+        {{ log.verifierAddress }}
+    </td>
+
+    <!-- Location -->
+    <td>
+        {% if log.location %}
+            {{ log.location }}
+        {% else %}
+            <span style="color:#9ca3af;">Not Available</span>
+        {% endif %}
+    </td>
+
+    <!-- IP -->
+    <td>
+        {% if log.ipAddress %}
+            {{ log.ipAddress }}
+        {% else %}
+            <span style="color:#9ca3af;">Unknown</span>
+        {% endif %}
+    </td>
+
+    <!-- Original Hash -->
+    <td class="hash-text">
+        {{ log.originalHash }}
+    </td>
+
+    <!-- Scanned Hash -->
+    <td class="hash-text">
+        {{ log.scannedHash }}
+    </td>
+
+    <!-- Result -->
+    <td>
+        {% if log.scannedHash == "Manual Verification" %}
+
+    {% if log.result == "Genuine" %}
+        <span class="status approved">Matched</span>
+    {% else %}
+        <span class="status pending">Not Matched</span>
+    {% endif %}
+
+{% else %}
+
+    {% if log.result == "Genuine" %}
+        <span class="status approved">Genuine</span>
+    {% else %}
+        <span class="status pending">Fake</span>
+    {% endif %}
+
+{% endif %}
+    </td>
+
+    <!-- Action Buttons -->
+    <td class="action-group">
+
+        <div class="action-buttons" style="display:flex; gap:8px;">
+
+            <a href="/view-original/{{ log.reportId }}"
+               class="btn-action view">
+               Original Report
+            </a>
+
+           {% if log.scannedFile and log.scannedHash != "Manual Verification" %}
+<a href="/view-scanned/{{ log.scannedFile }}"
+   class="btn-action logs">
+   Scanned Report
+</a>
+{% endif %}
+
+        </div>
+
+    </td>
+
+</tr>
+
+{% else %}
+<tr>
+    <td colspan="13" style="text-align:center;color:#6b7280;">
+        No verification history found
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+        </div>
+
+        <!-- ================= DOWNLOAD ================= -->
+        <div style="text-align:center;margin-top:35px;">
+            <a href="/download/admin-branch-verifications-excel/{{ branch.hospital_id }}"
+               class="btn-action logs"
+               style="padding:12px 40px;">
+               ⬇ Download Verification History
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= LIVE SEARCH SCRIPT ================= -->
+<script>
+document.getElementById("logSearch").addEventListener("keyup", function () {
+    const input = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".admin-table tr");
+
+    rows.forEach((row, index) => {
+        if (index === 0) return;
+
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+    });
+});
+</script>
+
+{% endblock %}

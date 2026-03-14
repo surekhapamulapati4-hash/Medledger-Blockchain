@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Hospital Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <div class="page-wrapper">
+
+        <!-- ================= HEADER ================= -->
+        <div class="details-header">
+
+            <div class="profile-box">
+                <div class="profile-icon">
+                    <div class="head"></div>
+                    <div class="body"></div>
+                </div>
+
+                <div class="profile-details">
+                    <h2>{{ hospital.hospital_name }}</h2>
+                    <span>Authorized Hospital Account</span>
+                </div>
+            </div>
+
+            <span class="admin-badge">
+                BRANCH HOSPITAL
+            </span>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= HOSPITAL INFO ================= -->
+        <div class="info-grid">
+
+            <div class="info-card">
+                <p>Hospital ID</p>
+                <h4>{{ hospital.hospital_id }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Hospital Type</p>
+                <span class="status pending">Branch Hospital</span>
+            </div>
+
+            <div class="info-card">
+                <p>Branch Name</p>
+                <h4>{{ hospital.branch_name }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Main Hospital ID</p>
+                <h4>{{ hospital.parent_hospital }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Email</p>
+                <h4>{{ hospital.email }}</h4>
+            </div>
+
+            <div class="info-card">
+                <p>Status</p>
+                {% if hospital.admin_status == "approved" and hospital.main_status == "approved" %}
+                    <span class="status approved">Approved</span>
+                {% else %}
+                    <span class="status pending">Pending Approval</span>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <hr class="divider">
+
+        <!-- ================= REPORTS ================= -->
+       <!-- ================= REPORTS ================= -->
+<h3 class="section-title">Uploaded Medical Reports</h3>
+
+<!-- TOTAL + SEARCH -->
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin:10px 0 25px;
+flex-wrap:wrap;
+gap:15px;
+">
+
+<div style="color:#6b7280;font-weight:600;">
+Total Reports: {{ reports|length }}
+</div>
+
+<div style="position: relative; width: 260px;">
+<input
+type="text"
+id="reportSearch"
+placeholder="Search reports..."
+style="
+width:100%;
+padding:12px 42px 12px 16px;
+border-radius:10px;
+border:1.5px solid #d1d5db;
+font-size:14px;
+"
+>
+<span style="
+position:absolute;
+right:14px;
+top:50%;
+transform:translateY(-50%);
+font-size:18px;
+color:#6b7280;">
+🔍
+</span>
+</div>
+
+</div>
+
+{% if reports|length == 0 %}
+
+<p style="color:#6b7280;">
+No reports uploaded yet.
+</p>
+
+{% else %}
+
+<div class="table-wrapper">
+
+<table class="admin-table modern-table">
+
+<tr>
+<th>S.No</th>
+<th>Report ID</th>
+<th>Upload Time</th>
+<th>Location</th>
+<th>IP</th>
+<th>Blockchain Hash</th>
+<th>File</th>
+<th>Actions</th>
+</tr>
+
+{% for r in reports %}
+<tr>
+
+<td><strong>{{ loop.index }}</strong></td>
+
+<td class="report-id">
+{{ r.report_id }}
+</td>
+
+<td>
+{{ r.uploaded_at_str }}
+</td>
+
+<td>
+{{ r.location if r.location else "Not provided" }}
+</td>
+
+<td>
+{{ r.ip_address if r.ip_address else "Unknown" }}
+</td>
+
+<td class="hash-text">
+{{ r.hash }}
+</td>
+
+<td>
+
+<a href="/view-report/{{ r.report_id }}"
+class="btn-action view">
+View Report
+</a>
+
+</td>
+
+<td class="action-group">
+
+<div class="action-buttons">
+
+<a href="/hospital/report/{{ r.report_id }}/verifications"
+class="btn-action logs">
+Verification Logs
+</a>
+
+<a href="#"
+class="btn-action delete"
+onclick="confirmDelete('{{ r.report_id }}')">
+Delete
+</a>
+
+</div>
+
+</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endif %}
+</div>
+</div>
+<!-- ================= SCRIPTS ================= -->
+
+<script>
+
+/* LIVE SEARCH */
+document.getElementById("reportSearch")?.addEventListener("keyup", function () {
+    const input = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".admin-table tr");
+
+    rows.forEach((row, index) => {
+        if (index === 0) return;
+        row.style.display = row.innerText.toLowerCase().includes(input)
+            ? ""
+            : "none";
+    });
+});
+
+/* SWEETALERT DELETE */
+function confirmDelete(reportId) {
+
+    Swal.fire({
+        icon: "error",
+        title: "Delete Not Allowed",
+        text: "Branch hospitals cannot delete medical reports. Only Admin can delete.",
+        confirmButtonColor: "#dc2626",
+        confirmButtonText: "OK"
+    });
+
+}
+</script>
+
+<!-- ================= LOGIN SUCCESS ================= -->
+{% if session.get("login_success") %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Login Successful',
+    text: 'Welcome to your hospital dashboard'
+});
+</script>
+{% set _ = session.pop("login_success") %}
+{% endif %}
+<script>
+
+document.getElementById("reportSearch").addEventListener("keyup", function(){
+
+const input = this.value.toLowerCase();
+
+const rows = document.querySelectorAll(".admin-table tr");
+
+rows.forEach((row, index)=>{
+
+if(index===0) return;
+
+row.style.display =
+row.innerText.toLowerCase().includes(input)
+? ""
+: "none";
+
+});
+
+});
+
+</script>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("error") === "delete_not_allowed") {
+
+    Swal.fire({
+        icon: "error",
+        title: "Delete Not Allowed",
+        text: "Branch hospitals cannot delete medical reports. Only Admin can delete.",
+        confirmButtonColor: "#dc2626"
+    });
+
+}
+
+</script>
+{% endblock %}

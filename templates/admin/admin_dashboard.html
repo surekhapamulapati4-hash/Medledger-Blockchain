@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="dashboard-container">
+    <div class="dashboard-card admin-dashboard">
+
+        <!-- ADMIN HEADER -->
+        <div class="admin-header">
+            <div class="admin-profile">
+                <div class="profile-icon-lg">
+                    <div class="head"></div>
+                    <div class="body"></div>
+                </div>
+
+                <div>
+                    <h2>System Administrator</h2>
+                    <p>National Medical Verification Authority</p>
+                </div>
+            </div>
+
+            <div class="admin-badge">
+                ADMIN ACCESS
+            </div>
+        </div>
+
+        <!-- ================= STATS ================= -->
+        <div class="admin-stats">
+
+            <div class="stat-card blue">
+                <h3>{{ hospitals|length }}</h3>
+                <p>Total Main Hospitals</p>
+            </div>
+
+            <div class="stat-card yellow">
+                <h3>
+                    {{ hospitals | selectattr("admin_status","equalto","pending") | list | length }}
+                </h3>
+                <p>Pending Approvals</p>
+            </div>
+
+            <div class="stat-card green">
+                <h3>
+                    {{ hospitals | selectattr("admin_status","equalto","approved") | list | length }}
+                </h3>
+                <p>Approved Hospitals</p>
+            </div>
+<div class="stat-card blue">
+    <h3>{{ genuine_count }}</h3>
+    <p>Genuine Reports</p>
+</div>
+
+<div class="stat-card yellow">
+    <h3>{{ fake_count }}</h3>
+    <p>Fake Reports</p>
+</div>
+        </div>
+<hr class="divider">
+
+<h3 class="section-title">Verification Analytics</h3>
+
+<div class="charts-grid">
+
+    <!-- PIE -->
+    <div class="chart-box">
+        <h4>Genuine vs Fake</h4>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- BAR -->
+    <div class="chart-box">
+        <h4>Verification Results</h4>
+        <canvas id="barChart"></canvas>
+    </div>
+
+</div>
+        <hr class="divider">
+
+        <!-- ================= HEADING + SEARCH ================= -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+            flex-wrap:wrap;
+            gap:15px;
+        ">
+
+            <h3 class="section-title" style="margin:0;">
+                Main Hospital Registrations
+            </h3>
+
+            <!-- SEARCH -->
+            <div style="position: relative; width: 280px;">
+                <input
+                    type="text"
+                    id="hospitalSearch"
+                    placeholder="Search hospital / ID / email..."
+                    style="
+                        width:100%;
+                        padding:12px 42px 12px 16px;
+                        border-radius:10px;
+                        border:1.5px solid #d1d5db;
+                        font-size:14px;
+                    "
+                >
+                <span style="
+                    position:absolute;
+                    right:14px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    font-size:18px;
+                    color:#6b7280;
+                    pointer-events:none;">
+                    🔍
+                </span>
+            </div>
+
+        </div>
+
+        <!-- ================= TABLE ================= -->
+        <div class="table-wrapper">
+            <table class="admin-table modern-table">
+
+                <tr>
+                    <th>S.No</th>
+                    <th>Hospital</th>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+
+                {% for h in hospitals %}
+                <tr>
+
+                    <td><strong>{{ loop.index }}</strong></td>
+
+                    <td>
+                        <strong>{{ h.hospital_name }}</strong><br>
+                        <small style="color:#6b7280;">{{ h.address }}</small>
+                    </td>
+
+                    <td>{{ h.hospital_id }}</td>
+                    <td>{{ h.email }}</td>
+
+                    <td>
+                        {% if h.admin_status == "approved" %}
+                            <span class="status approved">Approved</span>
+                        {% else %}
+                            <span class="status pending">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="action-group">
+
+   {% if h.admin_status != "approved" %}
+    <a href="#"
+       class="btn-action approve"
+       onclick="confirmApprove('{{ h.hospital_id }}')">
+        Approve
+    </a>
+{% else %}
+    <a href="#"
+       class="btn-action reject"
+       onclick="confirmReject('{{ h.hospital_id }}')">
+        Reject
+    </a>
+{% endif %}
+
+    <!-- BRANCHES -->
+    <a href="/admin/main/{{ h.hospital_id }}"
+       class="btn-action view">
+        Branches
+    </a>
+
+    <!-- REPORTS (NEW BUTTON) -->
+    <a href="/admin/reports/{{ h.hospital_id }}"
+       class="btn-action logs">
+    Reports
+    </a>
+
+    <!-- VERIFICATION LOGS -->
+    <a href="/admin/main/{{ h.hospital_id }}/verifications"
+       class="btn-action logs">
+       Verification Logs
+    </a>
+
+    <!-- DELETE -->
+    <a href="#"
+       class="btn-action delete"
+       onclick="confirmDelete('{{ h.hospital_id }}')">
+       Delete
+    </a>
+
+</td>
+
+                </tr>
+                {% endfor %}
+
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+
+<script>
+/* LIVE SEARCH */
+document.getElementById("hospitalSearch").addEventListener("keyup", function () {
+    const input = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".admin-table tr");
+
+    rows.forEach((row, index) => {
+        if (index === 0) return;
+        row.style.display = row.innerText.toLowerCase().includes(input)
+            ? ""
+            : "none";
+    });
+});
+
+/* SWEETALERT DELETE */
+function confirmDelete(hospitalId) {
+    Swal.fire({
+        title: 'Delete Hospital?',
+        text: 'This main hospital and all related data will be removed permanently.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/admin/delete/${hospitalId}`;
+        }
+    });
+}
+</script>
+<script>
+
+/* APPROVE CONFIRM */
+function confirmApprove(hospitalId) {
+    Swal.fire({
+        title: 'Approve Hospital?',
+        text: 'This hospital will gain full access.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/admin/approve/${hospitalId}?success=approved`;
+        }
+    });
+}
+
+
+/* REJECT CONFIRM */
+function confirmReject(hospitalId) {
+    Swal.fire({
+        title: 'Reject Hospital?',
+        text: 'This hospital access will be revoked.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/admin/reject/${hospitalId}?success=rejected`;
+        }
+    });
+}
+
+</script>
+
+{% if request.args.get("success") == "approved" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Hospital Approved',
+    text: 'Hospital has been approved successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+
+{% if request.args.get("success") == "rejected" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Hospital Rejected',
+    text: 'Hospital has been rejected successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+
+{% if request.args.get("success") == "deleted" %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Hospital Deleted',
+    text: 'Hospital removed successfully.',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+{% endif %}
+
+{% if session.get("admin_login_success") %}
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Admin Login Successful',
+    text: 'Welcome Administrator'
+});
+</script>
+{% set _ = session.pop("admin_login_success") %}
+{% endif %}
+<script>
+
+const genuine = {{ genuine_count }};
+const fake = {{ fake_count }};
+
+// PIE
+new Chart(document.getElementById("pieChart"), {
+    type: "pie",
+    data: {
+        labels: ["Genuine", "Fake"],
+        datasets: [{
+            data: [genuine, fake],
+            backgroundColor: ["#16a34a","#dc2626"],
+            borderWidth:0
+        }]
+    },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+            legend:{
+                position:"bottom",
+                labels:{
+                    boxWidth:12,
+                    font:{size:12}
+                }
+            }
+        }
+    }
+});
+
+
+// BAR (SMALL STYLE)
+new Chart(document.getElementById("barChart"), {
+    type: "bar",
+    data: {
+        labels: ["Genuine","Fake"],
+        datasets: [{
+            data: [genuine,fake],
+            backgroundColor: ["#16a34a","#dc2626"],
+            borderRadius:6,
+            barThickness:30
+        }]
+    },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+            legend:{display:false}
+        },
+        scales:{
+            x:{
+                grid:{display:false}
+            },
+            y:{
+                beginAtZero:true,
+                ticks:{
+                    stepSize:1,
+                    font:{size:11}
+                }
+            }
+        }
+    }
+});
+
+</script>
+{% endblock %}
